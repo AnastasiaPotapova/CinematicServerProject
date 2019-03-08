@@ -1,22 +1,22 @@
 {% extends "base.html" %}
  
 {% block content %}
-    <h1>Добавление новости</h1>
+    <h1>Добавление комнаты</h1>
     <form action="" method="post" novalidate>
         {{ form.hidden_tag() }}
         <p>
-            {{ form.title.label }}<br>
-            {{ form.title }}<br>
-            {% for error in form.title.errors %}
+            {{ form.roomname.label }}<br>
+            {{ form.roomname }}<br>
+            {% for error in form.roomname.errors %}
                 <div class="alert alert-danger" role="alert">
                     {{ error }}
                 </div>
             {% endfor %}
         </p>
         <p>
-            {{ form.content.label }}<br>
-            {{ form.content }}<br>
-            {% for error in form.content.errors %}
+            {{ form.roomcount.label }}<br>
+            {{ form.roomcount }}<br>
+            {% for error in form.roomcount.errors %}
                 <div class="alert alert-danger" role="alert">
                     {{ error }}
                 </div>

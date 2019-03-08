@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Комнаты</title>
+</head>
+<body>
+<a href="/add_news">Добавить комнату</a>
+{% for item in rooms %}
+    <div class="alert alert-dark" role="alert">
+        <h2>{{item[1]}}</h2>
+        <div>{{item[2]}}</div>
+        <a href="/delete_room/{{item[0]}}">Удалить комнату</a>
+        <a href="/films">Перейти в комнату</a>
+    </div>
+{% endfor %}
+</body>
+</html>

@@ -2,13 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Новости</title>
+    <title>Кинотеатры</title>
 </head>
 <body>
-{% for item in news %}
+<a href="/add_news">Добавить кинотеатр</a>
+{% for item in chain %}
     <div class="alert alert-dark" role="alert">
         <h2>{{item[1]}}</h2>
         <div>{{item[2]}}</div>
+        <a href="/delete_cinema/{{item[0]}}">Удалить кинотеатр</a>
+        <a href="/rooms/{{item[0]}}">Перейти в выбранный кинотеатр</a>
     </div>
 {% endfor %}
 </body>

@@ -1,20 +1,42 @@
 from flask import Flask, render_template, redirect, request, session
 from loginform import LoginForm
-from add_news import AddNewsForm
-from db import UserModel, NewsModel, DB
+from add_news import AddFilmForm, AddRoomForm, AddCinemaForm
+from db import UserModel, FilmModel, DB, CinemaModel, RoomModel
+from logic import Film, Room, Cinema, Chain
 import json
 
 app = Flask(__name__)
 db = DB()
+chains = {}
+
 
 @app.route('/')
-@app.route('/index')
-def index():
+@app.route('/chain')
+def chain():
     if 'username' not in session:
         return redirect('/login')
-    news = NewsModel(db.get_connection()).get_all(session['user_id'])
-    return render_template('news.html', username=session['username'],
-                           news=news)
+    chain = CinemaModel(db.get_connection()).get_all(session['user_id'])
+    return render_template('chain.html', username=session['username'],
+                           chain=chain)
+
+
+@app.route('/rooms/<int:cinema_id>')
+def rooms(cinema_id):
+    if 'username' not in session:
+        return redirect('/login')
+    rooms = RoomModel(db.get_connection()).get_all()
+    return render_template('rooms.html', username=session['username'],
+                           rooms=rooms)
+
+
+@app.route('/films/<int:room_id>')
+def films(room_id):
+    if 'username' not in session:
+        return redirect('/add_film')
+    film_id = FilmModel(db.get_connection()).get_room(room_id)
+    films = FilmModel(db.get_connection()).get_all(film_id)
+    return render_template('films.html', username=session['username'],
+                           films=films)
 
 
 @app.route('/logout')
@@ -24,52 +46,77 @@ def logout():
     return redirect('/login')
 
 
-@app.route('/news/user', methods=['GET', 'POST'])
-def newsuser():
-    if request.method == 'GET':
-        with open("news.json", "rt", encoding="utf8") as f:
-            news_list = json.loads(f.read())
-        return render_template('news.html', title='Новости', news=news_list)
-    elif request.method == 'POST':
-        print('-')
-
-
-@app.route('/add_news', methods=['GET', 'POST'])
-def add_news():
+@app.route('/add_cinema', methods=['GET', 'POST'])
+def add_cinema():
     if 'username' not in session:
         return redirect('/login')
-    form = AddNewsForm()
+    form = AddCinemaForm()
     if form.validate_on_submit():
-        title = form.title.data
-        content = form.content.data
-        nm = NewsModel(db.get_connection())
-        nm.insert(title, content, session['user_id'])
-        return redirect("/index")
-    return render_template('add_news.html', title='Добавление новости',
+        title = form.cinemaname.data
+        nm = CinemaModel(db.get_connection())
+        chains[session['username']].append(title)
+        nm.insert(title, session['user_id'])
+        return redirect("/chain")
+    return render_template('add_cinema.html', title='Добавление новости',
                            form=form, username=session['username'])
 
 
-@app.route('/delete_news/<int:news_id>', methods=['GET'])
-def delete_news(news_id):
+@app.route('/delete_cinema/<int:cinema_id>', methods=['GET'])
+def delete_cinema(cinema_id):
     if 'username' not in session:
         return redirect('/login')
-    nm = NewsModel(db.get_connection())
-    nm.delete(news_id)
-    return redirect("/index")
+    nm = CinemaModel(db.get_connection())
+    nm.delete(cinema_id)
+    return redirect("/chain")
 
 
-@app.route('/news/admin', methods=['GET', 'POST'])
-def newsadmin():
-    form = AddNewsForm()
-    if request.method == 'GET':
-        return render_template('admin.html', title='Редактирование Новости', form=form)
-    elif request.method == 'POST':
-        with open("news.json", "rt", encoding="utf8") as f:
-            news_list = json.loads(f.read())
-        news_list['news'].append({'title': request.form['title'], 'content': request.form['content']})
-        with open('news.json', 'w') as out:
-            json.dump(news_list, out)
-        return render_template('admin.html', title='Редактирование Новости', form=form, news=news_list)
+@app.route('/add_room/<int:cinema_id>', methods=['GET', 'POST'])
+def add_room(cinema_id):
+    if 'username' not in session:
+        return redirect('/login')
+    form = AddRoomForm()
+    if form.validate_on_submit():
+        title = form.roomname.data
+        content = form.roomcount.data
+        nm = RoomModel(db.get_connection())
+        chains[session['username']][cinema_id].append(title)
+        nm.insert(title, content, session['user_id'], cinema_id)
+        return redirect("/rooms")
+    return render_template('add_room.html', title='Добавление комнаты',
+                           form=form, username=session['username'])
+
+
+@app.route('/delete_room/<int:room_id>', methods=['GET'])
+def delete_room(room_id):
+    if 'username' not in session:
+        return redirect('/login')
+    nm = RoomModel(db.get_connection())
+    nm.delete(room_id)
+    return redirect("/rooms")
+
+
+@app.route('/add_film/<int:room_id>', methods=['GET', 'POST'])
+def add_film(room_id):
+    if 'username' not in session:
+        return redirect('/login')
+    form = AddFilmsForm()
+    if form.validate_on_submit():
+        name = form.filmname.data
+        content = form.filmadress.data
+        nm = FilmModel(db.get_connection())
+        nm.insert(name, content, session['user_id'], room_id)
+        return redirect("/film")
+    return render_template('add_film.html', title='Добавление фильма',
+                           form=form, username=session['username'])
+
+
+@app.route('/delete_film/<int:film_id>', methods=['GET'])
+def delete_film(film_id):
+    if 'username' not in session:
+        return redirect('/login')
+    nm = FilmModel(db.get_connection())
+    nm.delete(film_id)
+    return redirect("/films")
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -82,16 +129,11 @@ def login():
     if exists[0]:
         session['username'] = user_name
         session['user_id'] = exists[1]
-        return redirect("/index")
+        chains[session['username']] = Chain()
+        return redirect("/chain")
     else:
         user_model.insert(user_name, password)
         return render_template('login.html', title='Авторизация', form=form)
-    # with open('user.json', 'w') as out:
-    #     json.dump(users, out)
-    # if request.form['username'] == '123' and request.form['password'] == 'qwe':
-    #     return redirect('/news/admin')
-    # else:
-    #     return redirect('/news/user')
 
 
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'

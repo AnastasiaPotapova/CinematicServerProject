@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Фильмы</title>
+</head>
+<body>
+<a href="/add_news">Добавить фильм</a>
+{% for item in films %}
+    <div class="alert alert-dark" role="alert">
+        <h2>{{item[1]}}</h2>
+        <div>{{item[2]}}</div>
+        <a href="/delete_news/{{item[0]}}">Удалить фильм</a>
+        <a href="/delete_news/{{item[0]}}">Посмотреть фильм</a>
+    </div>
+{% endfor %}
+</body>
+</html>
