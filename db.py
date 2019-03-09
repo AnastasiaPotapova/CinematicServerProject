@@ -127,8 +127,8 @@ class RoomModel:
                                     (id INTEGER PRIMARY KEY AUTOINCREMENT, 
                                      title VARCHAR(100),
                                      content VARCHAR(1000),
-                                     user_id INTEGER,
-                                     cinema INTEGER
+                                     user_id INT(1000),
+                                     cinema INT(1000)
                                      )''')
         cursor.close()
         self.connection.commit()

@@ -81,7 +81,7 @@ def add_room(cinema_id):
         nm.insert(title, content, session['user_id'], cinema_id)
         return redirect("/rooms")
     return render_template('add_room.html', title='Добавление комнаты',
-                           form=form, username=session['username'], cinema_id = cinema_id)
+                           form=form, username=session['username'], cinema_id=cinema_id)
 
 
 @app.route('/delete_room/<int:room_id>/<cinema_id>', methods=['GET'])
