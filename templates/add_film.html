@@ -7,7 +7,7 @@
         <p>
             {{ form.filmname.label }}<br>
             {{ form.filmname }}<br>
-            {% for error in form.title.errors %}
+            {% for error in form.filmname.errors %}
                 <div class="alert alert-danger" role="alert">
                     {{ error }}
                 </div>

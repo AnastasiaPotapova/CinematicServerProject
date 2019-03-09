@@ -26,17 +26,16 @@ def rooms(cinema_id):
         return redirect('/login')
     rooms = RoomModel(db.get_connection()).get_all()
     return render_template('rooms.html', username=session['username'],
-                           rooms=rooms)
+                           rooms=rooms, cinema_id=cinema_id)
 
 
 @app.route('/films/<int:room_id>')
 def films(room_id):
     if 'username' not in session:
         return redirect('/add_film')
-    film_id = FilmModel(db.get_connection()).get_room(room_id)
-    films = FilmModel(db.get_connection()).get_all(film_id)
+    films = FilmModel(db.get_connection()).get_all()
     return render_template('films.html', username=session['username'],
-                           films=films)
+                           films=films, room_id=room_id)
 
 
 @app.route('/logout')
@@ -58,7 +57,7 @@ def add_cinema():
         nm.insert(title, session['user_id'])
         return redirect("/chain")
     return render_template('add_cinema.html', title='Добавление новости',
-                           form=form, username=session['username'])
+                           form=form, username=session['username'], user_id=session['user_id'])
 
 
 @app.route('/delete_cinema/<int:cinema_id>', methods=['GET'])
@@ -79,44 +78,43 @@ def add_room(cinema_id):
         title = form.roomname.data
         content = form.roomcount.data
         nm = RoomModel(db.get_connection())
-        chains[session['username']][cinema_id].append(title)
         nm.insert(title, content, session['user_id'], cinema_id)
         return redirect("/rooms")
     return render_template('add_room.html', title='Добавление комнаты',
-                           form=form, username=session['username'])
+                           form=form, username=session['username'], cinema_id = cinema_id)
 
 
-@app.route('/delete_room/<int:room_id>', methods=['GET'])
-def delete_room(room_id):
+@app.route('/delete_room/<int:room_id>/<cinema_id>', methods=['GET'])
+def delete_room(room_id, cinema_id):
     if 'username' not in session:
         return redirect('/login')
     nm = RoomModel(db.get_connection())
     nm.delete(room_id)
-    return redirect("/rooms")
+    return redirect("/rooms/{}".format(cinema_id))
 
 
 @app.route('/add_film/<int:room_id>', methods=['GET', 'POST'])
 def add_film(room_id):
     if 'username' not in session:
         return redirect('/login')
-    form = AddFilmsForm()
+    form = AddFilmForm()
     if form.validate_on_submit():
         name = form.filmname.data
         content = form.filmadress.data
         nm = FilmModel(db.get_connection())
         nm.insert(name, content, session['user_id'], room_id)
-        return redirect("/film")
+        return redirect("/films/{}".format(room_id))
     return render_template('add_film.html', title='Добавление фильма',
-                           form=form, username=session['username'])
+                           form=form, username=session['username'], room_id=room_id)
 
 
-@app.route('/delete_film/<int:film_id>', methods=['GET'])
-def delete_film(film_id):
+@app.route('/delete_film/<int:film_id>/<room_id>', methods=['GET'])
+def delete_film(film_id, room_id):
     if 'username' not in session:
         return redirect('/login')
     nm = FilmModel(db.get_connection())
     nm.delete(film_id)
-    return redirect("/films")
+    return redirect("/films/{}".format(room_id))
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -134,6 +132,13 @@ def login():
     else:
         user_model.insert(user_name, password)
         return render_template('login.html', title='Авторизация', form=form)
+
+
+@app.route('/show/<path>')
+def youtube(path):
+    return '''<div>
+            <iframe height="20%" src="{}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>'''.format(path)
 
 
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'

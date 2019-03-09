@@ -56,7 +56,6 @@ class UserModel:
         return (True, row[0]) if row else (False,)
 
 
-
 class FilmModel:
     def __init__(self, connection):
         self.connection = connection
@@ -65,18 +64,31 @@ class FilmModel:
                                     (id INTEGER PRIMARY KEY AUTOINCREMENT, 
                                      title VARCHAR(100),
                                      content VARCHAR(1000),
-                                     user_id INTEGER
+                                     user_id INT(1000),
+                                     room INT(1000)
                                      )''')
         cursor.close()
         self.connection.commit()
 
-    def insert(self, title, content, user_id):
-        cursor = self.connection.cursor()
-        cursor.execute('''INSERT INTO films 
-                          (title, content, user_id, room) 
-                          VALUES (?,?,?, &)''', (title, content, str(user_id)))
-        cursor.close()
-        self.connection.commit()
+    def insert(self, title, content, user_id, room_id):
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute('''INSERT INTO films 
+                              (title, content, user_id, room) 
+                              VALUES (?,?,?,?)''', (title, content, str(user_id), str(room_id)))
+            cursor.close()
+            self.connection.commit()
+        except Exception as e:
+            cursor = self.connection.cursor()
+            cursor.execute('''INSERT INTO films 
+                                          (title, content, user_id) 
+                                          VALUES (?,?,?)''', (title, content, str(user_id)))
+            cursor.close()
+            self.connection.commit()
+            cursor = self.connection.cursor()
+            cursor.execute('''SELECT * from films''')
+            row = cursor.fetchall()
+            print(row)
 
     def get(self, news_id):
         cursor = self.connection.cursor()
@@ -100,9 +112,9 @@ class FilmModel:
         cursor.close()
         self.connection.commit()
 
-    def get_cinema(self, room):
+    def get_room(self, room):
         cursor = self.connection.cursor()
-        cursor.execute("SELECT id FROM rooms WHERE room = ?", (str(room)))
+        cursor.execute("SELECT id FROM films WHERE room = ?", (str(room)))
         row = cursor.fetchone()
         return row
 
@@ -121,7 +133,7 @@ class RoomModel:
         cursor.close()
         self.connection.commit()
 
-    def insert(self, title, content, user_id):
+    def insert(self, title, content, user_id, cinema):
         cursor = self.connection.cursor()
         cursor.execute('''INSERT INTO rooms 
                           (title, content, user_id, cinema) 
@@ -165,7 +177,7 @@ class CinemaModel:
                                     (id INTEGER PRIMARY KEY AUTOINCREMENT, 
                                      title VARCHAR(100),
                                      content VARCHAR(1000),
-                                     user_id INTEGER
+                                     user_id INT(1000)
                                      )''')
         cursor.close()
         self.connection.commit()

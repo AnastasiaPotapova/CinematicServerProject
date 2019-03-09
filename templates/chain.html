@@ -5,7 +5,7 @@
     <title>Кинотеатры</title>
 </head>
 <body>
-<a href="/add_news">Добавить кинотеатр</a>
+<a href="/add_cinema/{{user_id}}">Добавить кинотеатр</a>
 {% for item in chain %}
     <div class="alert alert-dark" role="alert">
         <h2>{{item[1]}}</h2>
