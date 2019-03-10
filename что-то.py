@@ -15,7 +15,7 @@ chains = {}
 def chain():
     if 'username' not in session:
         return redirect('/login')
-    chain = CinemaModel(db.get_connection()).get_all(session['user_id'])
+    chain = CinemaModel(db.get_connection()).get_all()
     return render_template('chain.html', username=session['username'],
                            chain=chain)
 
@@ -79,7 +79,7 @@ def add_room(cinema_id):
         content = form.roomcount.data
         nm = RoomModel(db.get_connection())
         nm.insert(title, content, session['user_id'], cinema_id)
-        return redirect("/rooms")
+        return redirect("/rooms/{}".format(str(cinema_id)))
     return render_template('add_room.html', title='Добавление комнаты',
                            form=form, username=session['username'], cinema_id=cinema_id)
 
@@ -103,7 +103,7 @@ def add_film(room_id):
         content = form.filmadress.data
         nm = FilmModel(db.get_connection())
         nm.insert(name, content, session['user_id'], room_id)
-        return redirect("/films/{}".format(room_id))
+        return redirect("/films/{}".format(str(room_id)))
     return render_template('add_film.html', title='Добавление фильма',
                            form=form, username=session['username'], room_id=room_id)
 
@@ -135,10 +135,11 @@ def login():
 
 
 @app.route('/show/<path>')
-def youtube(path):
+def show(path):
+    film = FilmModel(db.get_connection()).get_path(path)
     return '''<div>
-            <iframe height="20%" src="{}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-            </div>'''.format(path)
+            <iframe height="80%" width="80%" src="{}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>'''.format(film[0])
 
 
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'

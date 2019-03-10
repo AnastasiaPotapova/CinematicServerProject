@@ -1,11 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Комнаты</title>
-</head>
-<body>
-<a href="/add_rooms/{{cinema_id}}">Добавить комнату</a>
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Залы</h1>
+    <form action="" method="post" novalidate>
+        <a href="/add_room/{{cinema_id}}">Добавить комнату</a>
 {% for item in rooms %}
     <div class="alert alert-dark" role="alert">
         <h2>{{item[1]}}</h2>
@@ -14,5 +12,5 @@
         <a href="/films/{{item[0]}}">Перейти в комнату</a>
     </div>
 {% endfor %}
-</body>
-</html>
+    </form>
+{% endblock %}
