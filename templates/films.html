@@ -1,18 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Фильмы</title>
-</head>
-<body>
-<a href="/add_film/{{room_id}}">Добавить фильм</a>
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Фильмы</h1>
+    <form action="" method="post" novalidate>
+        <a href="/add_film/{{room_id}}">Добавить фильм</a>
 {% for item in films %}
     <div class="alert alert-dark" role="alert">
         <h2>{{item[1]}}</h2>
         <div>{{item[2]}}</div>
         <a href="/delete_film/{{item[0]}}/{{room_id}}">Удалить фильм</a>
-        <a href="/show/{{item[2]}}">Посмотреть фильм</a>
+        <a href="/show/{{item[0]}}">Посмотреть фильм</a>
     </div>
 {% endfor %}
-</body>
-</html>
+    </form>
+{% endblock %}
