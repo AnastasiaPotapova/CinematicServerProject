@@ -71,24 +71,12 @@ class FilmModel:
         self.connection.commit()
 
     def insert(self, title, content, user_id, room_id):
-        try:
-            cursor = self.connection.cursor()
-            cursor.execute('''INSERT INTO films 
-                              (title, content, user_id, room) 
-                              VALUES (?,?,?,?)''', (title, content, str(user_id), str(room_id)))
-            cursor.close()
-            self.connection.commit()
-        except Exception as e:
-            cursor = self.connection.cursor()
-            cursor.execute('''INSERT INTO films 
-                                          (title, content, user_id) 
-                                          VALUES (?,?,?)''', (title, content, str(user_id)))
-            cursor.close()
-            self.connection.commit()
-            cursor = self.connection.cursor()
-            cursor.execute('''SELECT * from films''')
-            row = cursor.fetchall()
-            #print(row)
+        cursor = self.connection.cursor()
+        cursor.execute('''INSERT INTO films 
+                          (title, content, user_id, room) 
+                          VALUES (?,?,?,?)''', (title, content, str(user_id), str(room_id)))
+        cursor.close()
+        self.connection.commit()
 
     def get(self, news_id):
         cursor = self.connection.cursor()
@@ -114,8 +102,8 @@ class FilmModel:
 
     def get_room(self, room):
         cursor = self.connection.cursor()
-        cursor.execute("SELECT id FROM films WHERE room = ?", (str(room)))
-        row = cursor.fetchone()
+        cursor.execute("SELECT * FROM films WHERE room = ?", (str(room)))
+        row = cursor.fetchall()
         return row
 
     def get_path(self, film_id):
@@ -140,24 +128,12 @@ class RoomModel:
         self.connection.commit()
 
     def insert(self, title, content, user_id, cinema):
-        try:
-            cursor = self.connection.cursor()
-            cursor.execute('''INSERT INTO rooms 
-                              (title, content, user_id, cinema) 
-                              VALUES (?,?,?,?)''', (title, content, str(user_id), str(cinema)))
-            cursor.close()
-            self.connection.commit()
-        except Exception as e:
-            cursor = self.connection.cursor()
-            cursor.execute('''INSERT INTO rooms 
-                                          (title, content, user_id) 
-                                          VALUES (?,?,?)''', (title, content, str(user_id)))
-            cursor.close()
-            self.connection.commit()
-            cursor = self.connection.cursor()
-            cursor.execute('''SELECT * from rooms''')
-            row = cursor.fetchall()
-            #print(row)
+        cursor = self.connection.cursor()
+        cursor.execute('''INSERT INTO rooms 
+                          (title, content, user_id, cinema) 
+                          VALUES (?,?,?,?)''', (title, content, str(user_id), str(cinema)))
+        cursor.close()
+        self.connection.commit()
 
     def get(self, room_id):
         cursor = self.connection.cursor()
@@ -182,8 +158,8 @@ class RoomModel:
 
     def get_cinema(self, cinema):
         cursor = self.connection.cursor()
-        cursor.execute("SELECT id FROM rooms WHERE cinema = ?", (str(cinema)))
-        row = cursor.fetchone()
+        cursor.execute("SELECT * FROM rooms WHERE cinema = ?", (str(cinema)))
+        row = cursor.fetchall()
         return row
 
 

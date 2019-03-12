@@ -17,14 +17,14 @@ def chain():
         return redirect('/login')
     chain = CinemaModel(db.get_connection()).get_all()
     return render_template('chain.html', username=session['username'],
-                           chain=chain)
+                           chain=chain, user_id=session['user_id'])
 
 
 @app.route('/rooms/<int:cinema_id>')
 def rooms(cinema_id):
     if 'username' not in session:
         return redirect('/login')
-    rooms = RoomModel(db.get_connection()).get_all()
+    rooms = RoomModel(db.get_connection()).get_cinema(cinema_id)
     return render_template('rooms.html', username=session['username'],
                            rooms=rooms, cinema_id=cinema_id)
 
@@ -33,7 +33,7 @@ def rooms(cinema_id):
 def films(room_id):
     if 'username' not in session:
         return redirect('/add_film')
-    films = FilmModel(db.get_connection()).get_all()
+    films = FilmModel(db.get_connection()).get_room(room_id)
     return render_template('films.html', username=session['username'],
                            films=films, room_id=room_id)
 
@@ -45,16 +45,15 @@ def logout():
     return redirect('/login')
 
 
-@app.route('/add_cinema', methods=['GET', 'POST'])
-def add_cinema():
+@app.route('/add_cinema/<int:user_id>', methods=['GET', 'POST'])
+def add_cinema(user_id):
     if 'username' not in session:
         return redirect('/login')
     form = AddCinemaForm()
     if form.validate_on_submit():
         title = form.cinemaname.data
         nm = CinemaModel(db.get_connection())
-        chains[session['username']].append(title)
-        nm.insert(title, session['user_id'])
+        nm.insert(title, user_id)
         return redirect("/chain")
     return render_template('add_cinema.html', title='Добавление новости',
                            form=form, username=session['username'], user_id=session['user_id'])
@@ -84,7 +83,7 @@ def add_room(cinema_id):
                            form=form, username=session['username'], cinema_id=cinema_id)
 
 
-@app.route('/delete_room/<int:room_id>/<cinema_id>', methods=['GET'])
+@app.route('/delete_room/<int:room_id>/<int:cinema_id>', methods=['GET'])
 def delete_room(room_id, cinema_id):
     if 'username' not in session:
         return redirect('/login')
@@ -108,7 +107,7 @@ def add_film(room_id):
                            form=form, username=session['username'], room_id=room_id)
 
 
-@app.route('/delete_film/<int:film_id>/<room_id>', methods=['GET'])
+@app.route('/delete_film/<int:film_id>/<int:room_id>', methods=['GET'])
 def delete_film(film_id, room_id):
     if 'username' not in session:
         return redirect('/login')
