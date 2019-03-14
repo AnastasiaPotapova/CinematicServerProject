@@ -20,16 +20,17 @@ class UserModel:
         cursor.execute('''CREATE TABLE IF NOT EXISTS users 
                                     (id INTEGER PRIMARY KEY AUTOINCREMENT, 
                                      user_name VARCHAR(50),
-                                     password_hash VARCHAR(128)
+                                     password_hash VARCHAR(128),
+                                     email VARCHAR(50)
                                      )''')
         cursor.close()
         self.connection.commit()
 
-    def insert(self, user_name, password_hash):
+    def insert(self, user_name, password_hash, email):
         cursor = self.connection.cursor()
         cursor.execute('''INSERT INTO users 
-                          (user_name, password_hash) 
-                          VALUES (?,?)''', (user_name, password_hash))
+                          (user_name, password_hash, email) 
+                          VALUES (?,?,?)''', (user_name, password_hash, email))
         cursor.close()
         self.connection.commit()
 
@@ -52,8 +53,13 @@ class UserModel:
         except Exception as e:
             print(e)
         row = cursor.fetchone()
-        print(cursor.fetchall())
         return (True, row[0]) if row else (False,)
+
+    def get_names(self):
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT user_name FROM users")
+        row = cursor.fetchall()
+        return row
 
 
 class FilmModel:
@@ -193,8 +199,7 @@ class CinemaModel:
     def get_all(self, user_id=None):
         cursor = self.connection.cursor()
         if user_id:
-            cursor.execute("SELECT * FROM cinemas WHERE user_id = ?",
-                           (str(user_id)))
+            cursor.execute("SELECT * FROM cinemas WHERE user_id = {}".format(str(user_id)))
         else:
             cursor.execute("SELECT * FROM cinemas")
         rows = cursor.fetchall()

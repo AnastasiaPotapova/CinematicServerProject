@@ -3,13 +3,16 @@
 {% block content %}
     <h1>Залы</h1>
     <form action="" method="post" novalidate>
-        <a href="/add_room/{{cinema_id}}">Добавить комнату</a>
+        <div class="alert alert-light" role="alert">
+        <a class="btn btn-primary" href="/add_room/{{cinema_id}}">Добавить комнату</a>
+        <a class="btn btn-primary" href="/chain/{{user_id}}">Вернуться в кинотеатр</a>
+        </div>
 {% for item in rooms %}
     <div class="alert alert-dark" role="alert">
         <h2>{{item[1]}}</h2>
         <div>{{item[2]}}</div>
-        <a href="/delete_room/{{item[0]}}/{{cinema_id}}">Удалить комнату</a>
-        <a href="/films/{{item[0]}}">Перейти в комнату</a>
+        <a class="btn btn-primary" href="/delete_room/{{item[0]}}/{{cinema_id}}">Удалить комнату</a>
+        <a class="btn btn-primary" href="/films/{{item[0]}}/{{cinema_id}}">Перейти в комнату</a>
     </div>
 {% endfor %}
     </form>
