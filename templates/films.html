@@ -10,7 +10,6 @@
 {% for item in films %}
     <div class="alert alert-dark" role="alert">
         <h2>{{item[1]}}</h2>
-        <div>{{item[2]}}</div>
         <a class="btn btn-primary" href="/delete_film/{{item[0]}}/{{room_id}}">Удалить фильм</a>
         <a class="btn btn-primary" href="/show/{{item[0]}}">Посмотреть фильм</a>
     </div>

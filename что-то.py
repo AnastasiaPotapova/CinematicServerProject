@@ -3,11 +3,61 @@ from flask_mail import Message, Mail
 from loginform import LoginForm
 from add_news import AddFilmForm, AddRoomForm, AddCinemaForm
 from db import UserModel, FilmModel, DB, CinemaModel, RoomModel
+import Errors
 import json
 
 app = Flask(__name__)
+
+app.config.update(dict(
+    DEBUG=False,
+    MAIL_SERVER='smtp.yandex.ru',
+    MAIL_PORT=465,
+    MAIL_USE_SSL=True,
+    MAIL_USERNAME='nast-pota@ya.ru',
+    MAIL_PASSWORD='gjnfgjdf10',
+))
+
 mail = Mail(app)
 db = DB()
+
+
+def check_password(password):
+    try:
+        if len(password) <= 8:
+            raise LengthError
+
+        if password == password.lower() or password == password.upper():
+            raise LetterError
+
+        x = [d in '1234567890' for d in list(password)]
+
+        if not (True in x and False in x):
+            raise DigitError
+
+        for i in range(len(password) - 2):
+            if password[i:i + 3].lower() in 'qwertyuiop':
+                raise SequenceError
+            elif password[i:i + 3].lower() in 'asdfghjkl':
+                raise SequenceError
+            elif password[i:i + 3].lower() in 'zxcvbnm':
+                raise SequenceError
+            elif password[i:i + 3].lower() in 'йцукенгшщзхъ':
+                raise SequenceError
+            elif password[i:i + 3].lower() in 'фывапролджэё':
+                raise SequenceError
+            elif password[i:i + 3].lower() in 'ячсмитьбю':
+                raise SequenceError
+
+        return (True,)
+
+    except LengthError:
+        return (False, 'Пароль короткий!')
+    except LetterError:
+        return (False, 'В пароле использованы только строчные или только заглавные буквы.')
+    except DigitError:
+        return (False, 'Пароль состоит только из цифр или не имеет их вовсе.')
+    except SequenceError:
+        return (False, 'Пароль имеет сочетание трех подрядидущих букв на клавиатуре.')
 
 
 @app.route('/')
@@ -133,6 +183,8 @@ def login():
     else:
         if user_name in names:
             forget_password(UserModel(db.get_connection()).get_email(user_name), user_name)
+        else:
+            return render_template('login.html', title='Авторизация', form=form, error='Вас нет в базе')
         return render_template('login.html', title='Авторизация', form=form)
 
 
@@ -143,10 +195,17 @@ def registr():
     password = form.password.data
     email = form.email.data
     user_model = UserModel(db.get_connection())
-    user_model.insert(user_name, password, email)
+    exists = user_model.exists(user_name, password)
     if form.validate_on_submit():
-        user_model.insert(user_name, password, email)
-        return redirect('/login')
+        if exists[0]:
+            return render_template('registr.html', title='Регистрация', form=form, error='никнейм занят')
+        else:
+            a = check_password(password)
+            if a[0]:
+                user_model.insert(user_name, password, email)
+                return redirect('/login')
+            else:
+                return render_template('registr.html', title='Регистрация', form=form, error=a[1])
     return render_template('registr.html', title='Регистрация', form=form)
 
 
@@ -154,7 +213,7 @@ def registr():
 def show(path, room_id):
     film = FilmModel(db.get_connection()).get_path(path)
     return '''<div>
-            <iframe height="80%" width="80%" src="{}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            {}
             <a class="btn btn-primary" href="/films/{}">Вернуться в комнату</a>
             </div>'''.format(film[0], str(room_id))
 
@@ -169,7 +228,7 @@ def send_email(subject, sender, recipients, text_body, html_body):
 def follower_notification():
     send_email("{} is now following you!".format(session['username']),
                'nast-pota@ya.ru',
-               session['email'],
+               [session['email']],
                render_template("follower.txt", user=session['username']),
                render_template("follower.html", user=session['username']))
 
@@ -177,7 +236,7 @@ def follower_notification():
 def forget_password(email, user):
     send_email("{} forget password!".format(session['username']),
                'nast-pota@ya.ru',
-               email,
+               [email],
                render_template("forget_password.txt", user=user),
                render_template("forget_password.html", user=user))
 
