@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Кинотеатр</h1>
+    <h1>Список кинотеатров</h1>
     <form action="" method="post" novalidate>
         <div class="alert alert-light" role="alert">
         <a class="btn btn-primary" href="/add_cinema/{{user_id}}">Добавить кинотеатр</a>
@@ -10,7 +10,7 @@
     <div class="alert alert-dark" role="alert">
         <h2>{{item[1]}}</h2>
         <a class="btn btn-primary" href="/delete_cinema/{{item[0]}}">Удалить кинотеатр</a>
-        <a class="btn btn-primary" href="/rooms/{{item[0]}}">Перейти в выбранный кинотеатр</a>
+        <a class="btn btn-primary" href="/rooms/{{item[0]}}/{{user_id}}">Перейти в выбранный кинотеатр</a>
     </div>
 {% endfor %}
     </form>

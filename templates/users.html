@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Пользователи</h1>
+    <form action="" method="post" novalidate>
+        <div class="alert alert-light" role="alert">
+        </div>
+{% for item in users %}
+    <div class="alert alert-dark" role="alert">
+        <h2>{{item[1]}}</h2>
+        <a class="btn btn-primary" href="/delete_user/{{item[0]}}">Удалить пользователя</a>
+        <a class="btn btn-primary" href="/chain/{{item[0]}}">Перейти в выбранный профиль</a>
+    </div>
+{% endfor %}
+    </form>
+{% endblock %}

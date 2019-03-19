@@ -1,29 +1,27 @@
 {% extends "base.html" %}
  
 {% block content %}
-    <h1>Авторизация</h1>
+    <h1>Редактирование фильма</h1>
     <form action="" method="post" novalidate>
         {{ form.hidden_tag() }}
         <p>
-            {{ form.username.label }}<br>
-            {{ form.username }}<br>
-            {% for error in form.username.errors %}
+            {{ form.filmname.label }}<br>
+            {{ form.filmname }}<br>
+            {% for error in form.filmname.errors %}
                 <div class="alert alert-danger" role="alert">
                     {{ error }}
                 </div>
             {% endfor %}
         </p>
         <p>
-            {{ form.password.label }}<br>
-            {{ form.password }}<br>
-            {% for error in form.password.errors %}
+            {{ form.filmadress.label }}<br>
+            {{ form.filmadress }}<br>
+            {% for error in form.filmadress.errors %}
                 <div class="alert alert-danger" role="alert">
                     {{ error }}
                 </div>
             {% endfor %}
         </p>
-        <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
         <p>{{ form.submit() }}</p>
-        <a class="btn btn-primary" href="/registr">Регистрация</a>
     </form>
 {% endblock %}

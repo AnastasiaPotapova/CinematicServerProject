@@ -34,6 +34,12 @@ class UserModel:
         cursor.close()
         self.connection.commit()
 
+    def delete(self, room_id):
+        cursor = self.connection.cursor()
+        cursor.execute('''DELETE FROM users WHERE id = ?''', (str(room_id)))
+        cursor.close()
+        self.connection.commit()
+
     def get(self, user_id):
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM users WHERE id = ?", (str(user_id)))
@@ -55,9 +61,19 @@ class UserModel:
         row = cursor.fetchone()
         return (True, row[0]) if row else (False,)
 
-    def get_names(self):
+    def get_users(self, admin):
         cursor = self.connection.cursor()
-        cursor.execute("SELECT user_name FROM users")
+        cursor.execute("SELECT * FROM users")
+        row = cursor.fetchall()
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT * FROM users WHERE id = ?", (str(admin)))
+        admin = cursor.fetchone()
+        del row[row.index(admin)]
+        return row
+
+    def get_email(self, user):
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT email FROM users WHERE user_name = {}".format(str(user)))
         row = cursor.fetchall()
         return row
 
@@ -210,3 +226,4 @@ class CinemaModel:
         cursor.execute('''DELETE FROM cinemas WHERE id = ?''', (str(news_id)))
         cursor.close()
         self.connection.commit()
+

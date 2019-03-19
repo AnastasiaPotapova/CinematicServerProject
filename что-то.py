@@ -3,7 +3,7 @@ from flask_mail import Message, Mail
 from loginform import LoginForm
 from add_news import AddFilmForm, AddRoomForm, AddCinemaForm
 from db import UserModel, FilmModel, DB, CinemaModel, RoomModel
-import Errors
+from Errors import LengthError, LetterError, DigitError, SequenceError
 import json
 
 app = Flask(__name__)
@@ -19,6 +19,7 @@ app.config.update(dict(
 
 mail = Mail(app)
 db = DB()
+admins = ['main_admin']
 
 
 def check_password(password):
@@ -63,29 +64,37 @@ def check_password(password):
 @app.route('/')
 @app.route('/chain/<user_id>')
 def chain(user_id):
-    if 'username' not in session:
-        return redirect('/login')
-    chain = CinemaModel(db.get_connection()).get_all(session['user_id'])
+    chain = CinemaModel(db.get_connection()).get_all(user_id)
     return render_template('chain.html', username=session['username'],
                            chain=chain, user_id=user_id)
 
 
-@app.route('/rooms/<int:cinema_id>')
-def rooms(cinema_id):
-    if 'username' not in session:
-        return redirect('/login')
+@app.route('/users')
+def users():
+    users = UserModel(db.get_connection()).get_users(session['user_id'])
+    return render_template('users.html', username=session['username'],
+                           users=users)
+
+
+@app.route('/delete_user/<int:user_id>', methods=['GET'])
+def delete_user(user_id):
+    nm = UserModel(db.get_connection())
+    nm.delete(user_id)
+    return redirect("/users")
+
+
+@app.route('/rooms/<int:cinema_id>/<int:user_id>')
+def rooms(cinema_id, user_id):
     rooms = RoomModel(db.get_connection()).get_cinema(cinema_id)
     return render_template('rooms.html', username=session['username'],
-                           rooms=rooms, cinema_id=cinema_id, user_id=session['user_id'])
+                           rooms=rooms, cinema_id=cinema_id, user_id=user_id)
 
 
-@app.route('/films/<int:room_id>/<int:cinema_id>')
-def films(room_id, cinema_id):
-    if 'username' not in session:
-        return redirect('/add_film')
+@app.route('/films/<int:room_id>/<int:cinema_id>/<int:user_id>')
+def films(room_id, cinema_id, user_id):
     films = FilmModel(db.get_connection()).get_room(room_id)
     return render_template('films.html', username=session['username'],
-                           films=films, room_id=room_id, cinema_id=cinema_id)
+                           films=films, room_id=room_id, cinema_id=cinema_id, user_id=user_id)
 
 
 @app.route('/logout')
@@ -97,31 +106,27 @@ def logout():
 
 @app.route('/add_cinema/<int:user_id>', methods=['GET', 'POST'])
 def add_cinema(user_id):
-    if 'username' not in session:
-        return redirect('/login')
     form = AddCinemaForm()
     if form.validate_on_submit():
         title = form.cinemaname.data
         nm = CinemaModel(db.get_connection())
         nm.insert(title, user_id)
         return redirect("/chain/{}".format(user_id))
-    return render_template('add_cinema.html', title='Добавление новости',
-                           form=form, username=session['username'], user_id=session['user_id'])
+    return render_template('add_cinema.html', title='Добавление кинотеатра',
+                           form=form, username=session['username'], user_id=user_id)
 
 
 @app.route('/delete_cinema/<int:cinema_id>', methods=['GET'])
 def delete_cinema(cinema_id):
-    if 'username' not in session:
-        return redirect('/login')
     nm = CinemaModel(db.get_connection())
+    rooms = [x[0] for x in RoomModel(db.get_connection()).get_all(cinema_id)]
     nm.delete(cinema_id)
+    rooms = [delete_room(x, cinema_id) for x in rooms]
     return redirect("/chain/{}".format(session['user_id']))
 
 
 @app.route('/add_room/<int:cinema_id>', methods=['GET', 'POST'])
 def add_room(cinema_id):
-    if 'username' not in session:
-        return redirect('/login')
     form = AddRoomForm()
     if form.validate_on_submit():
         title = form.roomname.data
@@ -133,19 +138,17 @@ def add_room(cinema_id):
                            form=form, username=session['username'], cinema_id=cinema_id)
 
 
-@app.route('/delete_room/<int:room_id>/<int:cinema_id>', methods=['GET'])
-def delete_room(room_id, cinema_id):
-    if 'username' not in session:
-        return redirect('/login')
+@app.route('/delete_room/<int:room_id>/<int:cinema_id>/<int:user_id>', methods=['GET'])
+def delete_room(room_id, cinema_id, user_id):
     nm = RoomModel(db.get_connection())
+    films = [x[0] for x in FilmModel(db.get_connection()).get_all(room_id)]
     nm.delete(room_id)
-    return redirect("/rooms/{}".format(cinema_id))
+    films = [delete_film(x, room_id) for x in films]
+    return redirect("/rooms/{}/{}".format(cinema_id, user_id))
 
 
 @app.route('/add_film/<int:room_id>/<int:cinema_id>', methods=['GET', 'POST'])
 def add_film(room_id, cinema_id):
-    if 'username' not in session:
-        return redirect('/login')
     form = AddFilmForm()
     if form.validate_on_submit():
         name = form.filmname.data
@@ -173,15 +176,20 @@ def login():
     password = form.password.data
     user_model = UserModel(db.get_connection())
     exists = user_model.exists(user_name, password)
-    names = UserModel(db.get_connection()).get_names()
+    names = [x for x in UserModel(db.get_connection()).get_all()]
+    print(names)
     if exists[0]:
         session['username'] = user_name
         session['user_id'] = exists[1]
         session['email'] = UserModel(db.get_connection()).get(session['user_id'])[3]
-        follower_notification()
-        return redirect("/chain/{}".format(session['user_id']))
+        print('-')
+        if user_name in admins:
+            return redirect("/users")
+        else:
+            return redirect("/chain/{}".format(session['user_id']))
     else:
         if user_name in names:
+            print('-')
             forget_password(UserModel(db.get_connection()).get_email(user_name), user_name)
         else:
             return render_template('login.html', title='Авторизация', form=form, error='Вас нет в базе')
@@ -195,27 +203,28 @@ def registr():
     password = form.password.data
     email = form.email.data
     user_model = UserModel(db.get_connection())
-    exists = user_model.exists(user_name, password)
+    names = [x for x in UserModel(db.get_connection()).get_all()]
     if form.validate_on_submit():
-        if exists[0]:
-            return render_template('registr.html', title='Регистрация', form=form, error='никнейм занят')
+        if user_name in names:
+            return render_template('registr.html', title='Регистрация', form=form, usernameerror='никнейм занят')
         else:
             a = check_password(password)
             if a[0]:
                 user_model.insert(user_name, password, email)
+                follower_notification(user_name, email)
                 return redirect('/login')
             else:
-                return render_template('registr.html', title='Регистрация', form=form, error=a[1])
+                return render_template('registr.html', title='Регистрация', form=form, passworderror=a[1])
     return render_template('registr.html', title='Регистрация', form=form)
 
 
-@app.route('/show/<path>/<int:room_id>')
-def show(path, room_id):
-    film = FilmModel(db.get_connection()).get_path(path)
+@app.route('/show/<int:film_id>/<int:room_id>/<int:cinema_id>/<int:user_id>')
+def show(film_id, room_id, cinema_id, user_id):
+    film = FilmModel(db.get_connection()).get(film_id)
     return '''<div>
             {}
-            <a class="btn btn-primary" href="/films/{}">Вернуться в комнату</a>
-            </div>'''.format(film[0], str(room_id))
+            <a class="btn btn-primary" href="/films/{}/{}/{}">Вернуться в комнату</a>
+            </div>'''.format(film[2], str(room_id), str(cinema_id), str(user_id))
 
 
 def send_email(subject, sender, recipients, text_body, html_body):
@@ -225,20 +234,20 @@ def send_email(subject, sender, recipients, text_body, html_body):
     mail.send(msg)
 
 
-def follower_notification():
-    send_email("{} is now following you!".format(session['username']),
+def follower_notification(username, email):
+    send_email("{} зарегистрировался в систему кинотеатров!".format(username),
                'nast-pota@ya.ru',
-               [session['email']],
-               render_template("follower.txt", user=session['username']),
-               render_template("follower.html", user=session['username']))
+               [email],
+               render_template("follower.txt", user=username),
+               render_template("follower.html", user=username))
 
 
 def forget_password(email, user):
-    send_email("{} forget password!".format(session['username']),
+    send_email("{} forget password!".format(user),
                'nast-pota@ya.ru',
                [email],
-               render_template("forget_password.txt", user=user),
-               render_template("forget_password.html", user=user))
+               render_template("forget_password.txt", username=user),
+               render_template("forget_password.html", username=user))
 
 
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
