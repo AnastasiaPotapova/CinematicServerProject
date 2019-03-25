@@ -8,18 +8,22 @@
             {{ form.username.label }}<br>
             {{ form.username }}<br>
 
-            <div class="alert alert-danger" role="alert">
-                {{ usernameerror }}
-            </div>
+            {% for error in usernameerror%}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
 
         </p>
         <p>
             {{ form.password.label }}<br>
             {{ form.password }}<br>
 
-            <div class="alert alert-danger" role="alert">
-                {{ passworderror }}
-            </div>
+            {% for error in passworderror %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
 
         </p>
         <p>

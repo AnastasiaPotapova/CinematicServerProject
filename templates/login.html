@@ -7,7 +7,7 @@
         <p>
             {{ form.username.label }}<br>
             {{ form.username }}<br>
-            {% for error in form.username.errors %}
+            {% for error in usernameerrors %}
                 <div class="alert alert-danger" role="alert">
                     {{ error }}
                 </div>
@@ -16,7 +16,7 @@
         <p>
             {{ form.password.label }}<br>
             {{ form.password }}<br>
-            {% for error in form.password.errors %}
+            {% for error in passworderrors %}
                 <div class="alert alert-danger" role="alert">
                     {{ error }}
                 </div>

@@ -58,7 +58,7 @@ def check_password(password):
     except DigitError:
         return (False, 'Пароль состоит только из цифр или не имеет их вовсе.')
     except SequenceError:
-        return (False, 'Пароль имеет сочетание трех подрядидущих букв на клавиатуре.')
+        return (False, 'Пароль имеет сочетание трех подряд идущих букв на клавиатуре.')
 
 
 @app.route('/')
@@ -176,23 +176,25 @@ def login():
     password = form.password.data
     user_model = UserModel(db.get_connection())
     exists = user_model.exists(user_name, password)
-    names = [x for x in UserModel(db.get_connection()).get_all()]
-    print(names)
+    names = [x[1] for x in UserModel(db.get_connection()).get_all()]
+    print(names, exists)
     if exists[0]:
         session['username'] = user_name
         session['user_id'] = exists[1]
         session['email'] = UserModel(db.get_connection()).get(session['user_id'])[3]
-        print('-')
         if user_name in admins:
             return redirect("/users")
         else:
             return redirect("/chain/{}".format(session['user_id']))
     else:
         if user_name in names:
-            print('-')
-            forget_password(UserModel(db.get_connection()).get_email(user_name), user_name)
+            data = UserModel(db.get_connection()).get_all()
+            for i in data:
+                if i[1] == user_name:
+                    email = i[3]
+            forget_password(email, user_name)
         else:
-            return render_template('login.html', title='Авторизация', form=form, error='Вас нет в базе')
+            return render_template('login.html', title='Авторизация', form=form, usernameerror='Вас нет в базе')
         return render_template('login.html', title='Авторизация', form=form)
 
 
@@ -203,10 +205,10 @@ def registr():
     password = form.password.data
     email = form.email.data
     user_model = UserModel(db.get_connection())
-    names = [x for x in UserModel(db.get_connection()).get_all()]
-    if form.validate_on_submit():
+    names = [x[1] for x in UserModel(db.get_connection()).get_all()]
+    if request.method == 'POST':
         if user_name in names:
-            return render_template('registr.html', title='Регистрация', form=form, usernameerror='никнейм занят')
+            return render_template('registr.html', title='Регистрация', form=form, usernameerror=['никнейм занят'])
         else:
             a = check_password(password)
             if a[0]:
@@ -214,7 +216,7 @@ def registr():
                 follower_notification(user_name, email)
                 return redirect('/login')
             else:
-                return render_template('registr.html', title='Регистрация', form=form, passworderror=a[1])
+                return render_template('registr.html', title='Регистрация', form=form, passworderror=[a[1]])
     return render_template('registr.html', title='Регистрация', form=form)
 
 
