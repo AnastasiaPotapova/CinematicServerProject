@@ -125,15 +125,15 @@ def delete_cinema(cinema_id):
     return redirect("/chain/{}".format(session['user_id']))
 
 
-@app.route('/add_room/<int:cinema_id>', methods=['GET', 'POST'])
-def add_room(cinema_id):
+@app.route('/add_room/<int:cinema_id>/<int:user_id>', methods=['GET', 'POST'])
+def add_room(cinema_id, user_id):
     form = AddRoomForm()
     if form.validate_on_submit():
         title = form.roomname.data
         content = form.roomcount.data
         nm = RoomModel(db.get_connection())
         nm.insert(title, content, session['user_id'], cinema_id)
-        return redirect("/rooms/{}".format(str(cinema_id)))
+        return redirect("/rooms/{}/{}".format(str(cinema_id), str(user_id)))
     return render_template('add_room.html', title='Добавление комнаты',
                            form=form, username=session['username'], cinema_id=cinema_id)
 
@@ -147,15 +147,15 @@ def delete_room(room_id, cinema_id, user_id):
     return redirect("/rooms/{}/{}".format(cinema_id, user_id))
 
 
-@app.route('/add_film/<int:room_id>/<int:cinema_id>', methods=['GET', 'POST'])
-def add_film(room_id, cinema_id):
+@app.route('/add_film/<int:room_id>/<int:cinema_id>/<int:user_id>', methods=['GET', 'POST'])
+def add_film(room_id, cinema_id, user_id):
     form = AddFilmForm()
     if form.validate_on_submit():
         name = form.filmname.data
         content = form.filmadress.data
         nm = FilmModel(db.get_connection())
         nm.insert(name, content, session['user_id'], room_id)
-        return redirect("/films/{}/{}".format(str(room_id), str(cinema_id)))
+        return redirect("/films/{}/{}/{}".format(str(room_id), str(cinema_id), str(user_id)))
     return render_template('add_film.html', title='Добавление фильма',
                            form=form, username=session['username'], room_id=room_id)
 

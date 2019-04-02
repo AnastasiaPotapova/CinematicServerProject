@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Приятного просмотра!</h1>
+    <form action="" method="post" novalidate>
+        <div class="alert alert-light" role="alert">
+        <a class="btn btn-primary" href="/films/{{room_id}}/{{cinema_id}}/{{user_id}}">Вернуться к списку фильмов</a>
+        </div>
+        <div class="embed-responsive embed-responsive-16by9">
+            {{path}}
+        </div>
+    </form>
+{% endblock %}
